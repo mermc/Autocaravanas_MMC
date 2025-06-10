@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Reservas - Login"
+        android:text="Autocaravanas Milan"
         android:textAlignment="center"
         android:textSize="40sp"
         android:textStyle="bold"

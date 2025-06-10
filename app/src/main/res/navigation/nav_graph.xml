@@ -40,4 +40,5 @@
             app:argType="com.example.autocaravanas.model.Reserva"
             app:nullable="true" />
     </fragment>
+
 </navigation>

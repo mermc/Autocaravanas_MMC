@@ -1,82 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp">
 
-    <androidx.cardview.widget.CardView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        app:cardElevation="6dp"
-        app:cardCornerRadius="10dp">
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:background="@drawable/pink_border"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:id="@+id/nombreJinete"
-                android:layout_weight="200"
-                android:textColor="@color/red"
-                android:text="Nombre Jinete: "
-                android:textStyle="bold"
-                android:textSize="18sp"/>
+            <ImageView
+                android:id="@+id/ivCaravana"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                android:textAlignment="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintHorizontal_weight="4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvCaravanaNombre"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/telefono"
+                android:layout_marginStart="10dp"
                 android:layout_marginTop="8dp"
-                android:maxHeight="170dp"
-                android:text="Teléfono: "
+                android:textAlignment="center"
+                android:textColor="@color/green2"
+                android:text="Caravana: "
                 android:textSize="14sp"
-                android:textColor="@color/pink"/>
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@id/ivCaravana" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvCaravanaModelo"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/nombreCaballo"
-                android:layout_marginTop="8dp"
-                android:maxHeight="170dp"
-                android:text="Nombre Caballo: "
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:textColor="@color/green2"
+                android:text="Modelo: "
                 android:textSize="14sp"
-                android:textColor="@color/pink"/>
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvCaravanaNombre" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvCaravanaCapacidad"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/fechaReserva"
-                android:layout_marginTop="8dp"
-                android:maxHeight="170dp"
-                android:text="Fecha: "
-                android:textSize="14sp"
-                android:textColor="@color/pink"/>
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:textColor="@color/green2"
+                android:text="Capacidad: "
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvCaravanaModelo" />
+
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvFechaInicio"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/horaReserva"
-                android:layout_marginTop="8dp"
-                android:maxHeight="170dp"
-                android:text="Hora: "
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:text="Fecha Inicio: "
                 android:textSize="14sp"
-                android:textColor="@color/pink"/>
+                android:textColor="@color/green1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvCaravanaCapacidad" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvFechaFin"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/comentario"
-                android:layout_marginTop="8dp"
-                android:maxHeight="170dp"
-                android:text="Comentarios: "
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:text="Fecha Fin: "
                 android:textSize="14sp"
-                android:textColor="@color/pink"/>
+                android:textColor="@color/green1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvFechaInicio" />
 
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-</layout>
+            <TextView
+                android:id="@+id/tvPrecioTotal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:text="Precio Total: "
+                android:textSize="14sp"
+                android:textColor="@color/green1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvFechaFin" />
+
+            <TextView
+                android:id="@+id/tvPrecioPagado"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center"
+                android:text="Precio Pagado: "
+                android:textSize="14sp"
+                android:textColor="@color/green1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivCaravana"
+                app:layout_constraintTop_toTopOf="@+id/tvPrecioTotal" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

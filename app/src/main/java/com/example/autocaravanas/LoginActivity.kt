@@ -29,7 +29,7 @@ val Context.dataStore by preferencesDataStore(name = "USER_PREFERENCES")
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private var repository: ReservaRepository = ReservaRepository(ApiHelper(ApiAdapter.instance!!))
+    private var repository: ReservaRepository = ReservaRepository(ApiHelper(ApiAdapter.apiService))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +52,7 @@ class LoginActivity : AppCompatActivity() {
                     val response = repository.login(email, password)
 
                     if (response.success) {
+                        ApiAdapter.setToken(response.login.token)
                         withContext(Dispatchers.Main) {
                             toggleUI(true)
                         }
@@ -104,6 +105,7 @@ class LoginActivity : AppCompatActivity() {
             if (binding.cbRememberLogin.isChecked) {
                 preferences[stringPreferencesKey("email")] = email
                 preferences[stringPreferencesKey("password")] = password
+                preferences[stringPreferencesKey("token")] = ApiAdapter.token
             } else {
                 preferences.remove(stringPreferencesKey("email"))
                 preferences.remove(stringPreferencesKey("password"))

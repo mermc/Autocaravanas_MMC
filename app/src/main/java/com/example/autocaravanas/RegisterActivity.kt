@@ -2,6 +2,7 @@ package com.example.autocaravanas
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -18,7 +19,8 @@ import kotlinx.coroutines.withContext
 class RegisterActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
-    private var repository: ReservaRepository = ReservaRepository(ApiHelper(ApiAdapter.instance!!))
+    private var repository: ReservaRepository = ReservaRepository(ApiHelper(ApiAdapter.apiService))
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,16 +46,29 @@ class RegisterActivity: AppCompatActivity() {
                         confirmPassword
                     )
 
+                    Log.d("RegisterActivity", "Introducidos los datos: $name, $email, $password, $confirmPassword")
+
                     if (response.success) {
+
+                        Log.d("RegisterActivity", "Dentro de success: ${response.login.token}")
+                        ApiAdapter.setToken(response.login.token)
+
+                        val user = repository.getUser()
+
                         withContext(Dispatchers.Main) {
                             binding.btRegistro.isEnabled = true
+                            if (user.emailVerifiedAt == null) {
+                                val intent = Intent(this@RegisterActivity, EmailVerificationActivity::class.java)
+                                intent.putExtra("EMAIL", email)
+                                startActivity(intent)
+                            } else {
+                                val mainIntent = Intent(this@RegisterActivity, MainActivity::class.java)
+                                startActivity(mainIntent)
+                            }
+                            finish()
                         }
-
-                        val mainActivityIntent = Intent(this@RegisterActivity, MainActivity::class.java)
-                        mainActivityIntent.putExtra("API_TOKEN", response.login.token)
-                        startActivity(mainActivityIntent)
-                        finish()
                     } else {
+                        Log.d("RegisterActivity", "No ha habido exito en el registro: ${response.message}")
                         withContext(Dispatchers.Main) {
                             val alertDialog: AlertDialog =
                                 AlertDialog.Builder(this@RegisterActivity).create().apply {

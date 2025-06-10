@@ -1,62 +1,76 @@
 package com.example.autocaravanas.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.navigation.findNavController
+import com.bumptech.glide.Glide
+import com.example.autocaravanas.databinding.ReservaLayoutBinding
 import com.example.autocaravanas.model.Reserva
+import com.example.autocaravanas.fragments.HomeFragmentDirections
 
 class ReservaAdapter() : RecyclerView.Adapter<ReservaAdapter.ReservaViewHolder>() {
 
-    var reservasList: List<Reserva> = emptyList()
+    class ReservaViewHolder(val itemBinding: ReservaLayoutBinding): RecyclerView.ViewHolder(itemBinding.root)
 
-    var onItemClick: ((Reserva) -> Unit)? = null
-    var onLongItemClick: ((Reserva) -> Unit)? = null
+    // Diferenciador para comparar los elementos de la lista
+    private val differCallback = object : DiffUtil.ItemCallback<Reserva>(){
+        override fun areItemsTheSame(oldItem: Reserva, newItem: Reserva): Boolean {
+            return oldItem.id == newItem.id &&
+                    oldItem.caravana == newItem.caravana &&
+                    oldItem.fechaInicio == newItem.fechaInicio &&
+                    oldItem.fechaFin == newItem.fechaFin &&
+                    oldItem.precioTotal == newItem.precioTotal &&
+                    oldItem.precioPagado == newItem.precioPagado
 
+        }
+
+        override fun areContentsTheSame(oldItem: Reserva, newItem:Reserva): Boolean {
+            return oldItem == newItem
+        }
+    }
+    private val differ = AsyncListDiffer(this, differCallback)
+
+    fun submitList(list: List<Reserva>) {
+        differ.submitList(list)
+    }
+
+    // Inflamos el layout de cada elemento de la lista
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReservaViewHolder {
-        val itemBinding =
-            ReservaItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ReservaViewHolder(itemBinding)
+        return ReservaViewHolder(
+            ReservaLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
     }
 
-    override fun getItemCount(): Int = reservasList.size
+    override fun getItemCount(): Int {
+        return differ.currentList.size
+    }
 
+    // Enlazamos los datos del modelo a la vista mostrando los detalles de la reserva según el ViewHolder
     override fun onBindViewHolder(holder: ReservaViewHolder, position: Int) {
-        val item = reservasList[position]
-        holder.render(item)
-    }
+        val currentReserva = differ.currentList[position]
 
-    fun getItem(position: Int): Reserva {
-        return reservasList.get(position)
-    }
+        val url = "https://caravanas.milanmc.me/storage/" + (currentReserva.caravana?.foto ?: "")
+        Log.d("ReservaAdapter", "URL de la imagen: $url")
+        Glide.with(holder.itemView.context)
+            .load(url)
+            .into(holder.itemBinding.ivCaravana)
 
-    inner class ReservaViewHolder(binding: ReservaItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        val caravana = binding.tvCaravana
-        val fecha_inicio = binding.tvFechaInicio
-        val fecha_fin = binding.tvFechaFin
-        val precio_total = binding.tvPrecioTotal
-        val precio_pagado = binding.tvPrecioPagado
-        val fianza = binding.tvFianza
+        holder.itemBinding.tvCaravanaNombre.text = "Caravana: ${currentReserva.caravana?.nombre ?: ""}"
+        holder.itemBinding.tvCaravanaModelo.text = "Modelo:  ${currentReserva.caravana?.modelo ?: ""}"
+        holder.itemBinding.tvCaravanaCapacidad.text = "Capacidad: ${currentReserva.caravana?.capacidad ?: ""}"
+        holder.itemBinding.tvFechaInicio.text = "Fecha Inicio: ${currentReserva.fechaInicio}"
+        holder.itemBinding.tvFechaFin.text = "Fecha Fin: ${currentReserva.fechaFin}"
+        holder.itemBinding.tvPrecioTotal.text = "Precio Total: ${currentReserva.precioTotal.toString()}"
+        holder.itemBinding.tvPrecioPagado.text = "Precio Pagado: ${currentReserva.precioPagado.toString()}"
 
-        init {
-            itemView.setOnClickListener {
-                onItemClick?.invoke(reservasList[layoutPosition])
-            }
-
-            itemView.setOnLongClickListener {
-                onLongItemClick?.invoke(reservasList[layoutPosition])
-                false
-            }
-        }
-
-        fun render(reserva: Reserva) {
-            caravana.text = reserva.caravana
-            fecha_inicio.text = reserva.fechaInicio
-            fecha_fin.text = reserva.fechaFin
-            precio_total.text = reserva.precioTotal
-            precio_pagado.text = reserva.precioPagado
-            fianza.text = reserva.fianza
-
+        holder.itemView.setOnClickListener {
+            val direction = HomeFragmentDirections.actionHomeFragmentToEditReservaFragment(currentReserva)
+            it.findNavController().navigate(direction)
         }
     }
+
 }

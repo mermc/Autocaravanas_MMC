@@ -1,33 +1,39 @@
 package com.example.autocaravanas.api
 
-import okhttp3.Interceptor
+
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiAdapter {
-    private var API_SERVICE: ApiService? = null
     private const val BASE_URL = "https://caravanas.milanmc.me/"
-    public var API_TOKEN: String = ""
 
-    @get:Synchronized
-    val instance: ApiService?
-        get() {
-            if (API_SERVICE == null) {
-                val client = OkHttpClient.Builder().addInterceptor(Interceptor { chain ->
-                    val request = chain.request().newBuilder().addHeader("Authorization", "Bearer ${API_TOKEN}").build()
+    //privada para almacenar el token
+    private var _token: String = ""
+    // getter del token
+    val token: String
+        get() = _token
 
-                    chain.proceed(request)
-                }).build()
+    fun setToken(newToken: String) {
+        _token = newToken
+    }
 
-                val retrofit = Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .client(client)
-                    .build()
+    private val client: OkHttpClient by lazy {
+        OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Accept", "application/json")
+                .build()
+            chain.proceed(request)
+        }.build()
+    }
 
-                API_SERVICE = retrofit.create(ApiService::class.java)
-            }
-            return API_SERVICE
-        }
+    val apiService: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
 }

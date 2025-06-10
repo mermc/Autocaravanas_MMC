@@ -1,167 +1,184 @@
 package com.example.autocaravanas.fragments
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import java.time.LocalDate
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.autocaravanas.MainActivity
+import com.example.autocaravanas.R
+import com.example.autocaravanas.adapter.CaravanaDisponibleAdapter
+import com.example.autocaravanas.databinding.DialogResumenReservaBinding
+import com.example.autocaravanas.databinding.FragmentAddReservaBinding
+import com.example.autocaravanas.model.Caravana
+import com.example.autocaravanas.model.Reserva
+import com.example.autocaravanas.viewmodel.ReservaViewModel
 import java.util.Calendar
 
-class AddReservaFragment : Fragment(R.layout.fragment_add_reserva), MenuProvider {
 
-    private var addReservaBinding: FragmentAddReservaBinding? = null
-    private val binding get() = addReservaBinding!!
+class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
 
+    private var _binding: FragmentAddReservaBinding? = null
+    private val binding get() = _binding!!
     private lateinit var reservasViewModel: ReservaViewModel
-    private lateinit var addReservaView: View
 
+    private var caravanaList: List<Caravana> = emptyList()
+    private lateinit var caravanaAdapter: CaravanaDisponibleAdapter
+    private var selectedCaravana: Caravana? = null
+    private var fechaInicio: String = ""
+    private var fechaFin: String = ""
+    private var reservasPrevias: Int = 0
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        addReservaBinding = FragmentAddReservaBinding.inflate(inflater, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentAddReservaBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-
         reservasViewModel = (activity as MainActivity).reservaViewModel
-        addReservaView = view
 
-        iniciarSpinnerCaballo()
-        iniciarSpinnerHora()
+        setupDatePickers()
 
-        binding.addReservaFecha.setOnClickListener {
-            mostrarDatePickerDialog()
+        setupHomeRecyclerView()
+
+        // Observa los cambios para mostrar mensajes
+        reservasViewModel.error.observe(viewLifecycleOwner) { errorMsg ->
+            errorMsg?.let {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                reservasViewModel.clearError()
+            }
+        }
+
+        reservasPrevias = reservasViewModel.reservas.value?.size ?: 0
+
+        reservasViewModel.reservas.observe(viewLifecycleOwner) { reservas ->
+            if (reservas.size > reservasPrevias) {
+                findNavController().navigate(R.id.action_addReservaFragment_to_homeFragment)
+            }
+            reservasPrevias = reservas.size
         }
     }
 
-    private fun mostrarDatePickerDialog() {
+    private fun setupDatePickers() {
+        Log.d("AddReservaFragment", "Fechas Bien")
+        binding.fechaInicio.setOnClickListener {
+            showDatePicker { date ->
+                fechaInicio = date
+                binding.fechaInicio.text = date
+                // Reset fechaFin y caravana al cambiar fechaInicio
+                binding.fechaFin.text = ""
+                fechaFin = ""
+                caravanaList = emptyList()
+                selectedCaravana = null
+            }
+        }
+        binding.fechaFin.setOnClickListener {
+            if (fechaInicio.isEmpty()) {
+                Toast.makeText(context, "Selecciona primero la fecha de inicio", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            showDatePicker { date ->
+                fechaFin = date
+                binding.fechaFin.text = date
+                Log.d("AddReservaFragment", "Enviando fechas: inicio=$fechaInicio, fin=$fechaFin")
+                fetchCaravanasDisponibles()
+            }
+        }
+    }
+
+    private fun showDatePicker(onDateSet: (String) -> Unit) {
+        Log.d("AddReservaFragment", "ShowBien")
         val calendar = Calendar.getInstance()
-        val datePickerDialog = datePickerDialogCustom(
-            requireContext(),
-            DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                binding.addReservaFecha.text = "$dayOfMonth/${month + 1}/$year"
-            }
-        )
-        datePickerDialog.show()
+        val datePicker = DatePickerDialog(requireContext(), { _, year, month, day ->
+            val fecha = String.format("%04d-%02d-%02d", year, month + 1, day)
+            onDateSet(fecha)
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+        datePicker.show()
     }
 
-    private fun saveReserva(view: View) {
-        val reservaJinete = binding.addReservaJinete.text.toString().trim()
-        val reservaTelefono = binding.addReservaTelefono.text.toString().trim()
-        val reservaCaballo = binding.spinnerReservaCaballo.selectedItem?.toString()?.trim()
-        val fechaTexto = binding.addReservaFecha.text.toString().trim()
-        val reservaHora = binding.addReservaHora.selectedItem?.toString()?.trim()
-        val reservaComentario = binding.addReservaComentario.text.toString().trim()
-
-        // Validamos primero campos obligatorios para que no de error si se pulsa en guardar o cierre la aplicación
-        if (reservaJinete.isEmpty() || reservaTelefono.isEmpty() || reservaCaballo.isNullOrEmpty() ||
-            fechaTexto.isEmpty() || reservaHora.isNullOrEmpty()) {
-            Toast.makeText(addReservaView.context, "Por favor completa todos los campos obligatorios", Toast.LENGTH_SHORT).show()
-            return
+    private fun setupHomeRecyclerView() {
+        Log.d("AddReservaFragment", "Ha entrado en recyclerview")
+        caravanaAdapter = CaravanaDisponibleAdapter( caravanaList) { caravana ->
+            selectedCaravana = caravana
+            mostrarDialogResumen(caravana)
         }
-
-        // Validar número de teléfono
-        val telefonoRegex = Regex("^\\d{9}$")
-        if (!telefonoRegex.matches(reservaTelefono)) {
-            Toast.makeText(addReservaView.context, "El número de teléfono debe tener 9 dígitos", Toast.LENGTH_SHORT).show()
-            return
-        }
-        // Procesar la fecha después de los otros campos porque es la que más puede dar error
-        val (day, month, year) = fechaTexto.split("/").map { it.toInt() }
-        val reservaFecha = LocalDate.of(year, month, day).toString()
-
-        // Crea y guarda la reserva
-        val reserva = Reserva(
-            0,
-            reservaJinete,
-            reservaTelefono,
-            reservaCaballo,
-            reservaFecha,
-            reservaHora,
-            reservaComentario
-        )
-        reservasViewModel.addReserva(reserva)
-
-        Toast.makeText(addReservaView.context, "Reserva Realizada con Éxito", Toast.LENGTH_SHORT).show()
-        view.findNavController().popBackStack(R.id.homeFragment, false)
-
-        // Enviar mensaje
-        enviarMensaje(reserva)
-
-    }
-
-    private fun iniciarSpinnerCaballo() {
-        val caballos = listOf("Moreno", "Canela", "Soberano", "Viviana", "Luz", "Blanca Paloma") // Lista de nombres de caballos
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, caballos)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerReservaCaballo.adapter = adapter
-    }
-    private fun iniciarSpinnerHora() {
-        val horas = listOf("10:00", "11:00") // Lista de horas disponibles
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, horas)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.addReservaHora.adapter = adapter
-    }
-
-    private fun enviarMensaje(reserva: Reserva) {
-        val mensaje = "¡Gracias por realizar tu reserva con nosotras!\n\n" +
-                "Detalles de la reserva:\n" +
-                "Nombre del caballo: ${reserva.nombreCaballo}\n" +
-                "Fecha del paseo: ${reserva.fechaReserva}\n" +
-                "Hora del paseo: ${reserva.horaReserva}\n" +
-                "Cualquier duda puedes contestar a este mensaje o enviar un email a info@reservashipica.com y te la aclararemos.\n"
-
-
-        val numeroTelefono = "34${reserva.telefono}" // Agregamos el código de España
-
-        try {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://api.whatsapp.com/send?phone=$numeroTelefono&text=${Uri.encode(mensaje)}")
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e("EnviarMensaje", "Error al abrir WhatsApp: ${e.message}", e)
-            Toast.makeText(addReservaView.context, "No se pudo abrir WhatsApp", Toast.LENGTH_SHORT).show()
+        binding.rvCaravanas.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            setHasFixedSize(true)
+            adapter = caravanaAdapter
         }
     }
 
-    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menu.clear()
-        menuInflater.inflate(R.menu.menu_add_reserva, menu)
+    private fun mostrarDialogResumen(caravana: Caravana) {
+        val binding = DialogResumenReservaBinding.inflate(layoutInflater)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(binding.root)
+            .setCancelable(false)
+            .create()
+
+        binding.tvCaravana.text = "Caravana: ${caravana.nombre} (${caravana.modelo})"
+        binding.tvFechas.text = "Del $fechaInicio al $fechaFin"
+        binding.tvCapacidad.text = "Capacidad: ${caravana.capacidad}"
+        binding.tvPrecio.text = "Precio por día: ${caravana.precioDia} €"
+
+
+        binding.btnCancelar.setOnClickListener { dialog.dismiss() }
+        binding.btnConfirmar.setOnClickListener {
+            val reserva = Reserva(
+                id = 0,
+                userId =0,
+                usuario = null,
+                caravanaId = caravana.id,
+                caravana = caravana,
+                fechaInicio = fechaInicio,
+                fechaFin = fechaFin,
+                precioTotal = "",
+                precioPagado = "",
+                fianza = "",
+                createdAt = null,
+                updatedAt = null
+            )
+            Log.d("AddReservaFragment", "Reserva: $reserva")
+            reservasViewModel.crearReserva(reserva)
+            dialog.dismiss()
+            findNavController().navigate(R.id.action_addReservaFragment_to_homeFragment)
+        }
+
+        dialog.show()
     }
 
-    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when(menuItem.itemId){
-            R.id.saveMenu -> {
-                saveReserva(addReservaView)
-                true
-            }
-            else -> false
+
+
+
+    private fun fetchCaravanasDisponibles() {
+        Log.d("AddReservaFragment", "FetchBien")
+        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) return
+        reservasViewModel.getCaravanasDisponibles(fechaInicio, fechaFin) { disponibles ->
+            caravanaList = disponibles
+            updateCaravanaRecycler()
+            Log.d("AddReservaFragment", "Caravanas disponibles: $caravanaList")
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        addReservaBinding = null
+    private fun updateCaravanaRecycler() {
+        Log.d("AddReservaFragment", "UpdateBien")
+        caravanaAdapter = CaravanaDisponibleAdapter(caravanaList) { caravana ->
+            mostrarDialogResumen(caravana)
+        }
+        binding.rvCaravanas.adapter = caravanaAdapter
+    }
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -1,74 +1,155 @@
 package com.example.autocaravanas.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.autocaravanas.api.ApiAdapter.instance
+import androidx.lifecycle.viewModelScope
+import com.example.autocaravanas.api.ApiAdapter
 import com.example.autocaravanas.api.ApiHelper
+import com.example.autocaravanas.model.Caravana
+import com.example.autocaravanas.model.GenericResponse
 import com.example.autocaravanas.model.Reserva
-import com.example.autocaravanas.model.ReservasResponse
-import com.example.autocaravanas.model.ReservaResponse
 import com.example.autocaravanas.repository.ReservaRepository
+import kotlinx.coroutines.launch
 
-class ReservaViewModel (application: Application) : AndroidViewModel(application) {
+class ReservaViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _reservas: MutableLiveData<List<Reserva>> = MutableLiveData()
+    internal var repository: ReservaRepository = ReservaRepository(ApiHelper(ApiAdapter.apiService))
+
+    private val _reservas = MutableLiveData<List<Reserva>>()
     val reservas: LiveData<List<Reserva>> get() = _reservas
 
-    private var repository: ReservaRepository = ReservaRepository(ApiHelper(instance!!))
+    private val _updateResult = MutableLiveData<Reserva?>()
+    val updateResult: LiveData<Reserva?> get() = _updateResult
 
-    suspend fun getReservas(): ReservasResponse {
-        val reservasResponse = repository.getReservas()
-        _reservas.value = reservasResponse.reservas
+    private val _loading = MutableLiveData<Boolean>()
+    val loading: LiveData<Boolean> get() = _loading
 
-        return reservasResponse
-    }
+    private val _error = MutableLiveData<String?>()
+    val error: LiveData<String?> get() = _error
 
-    suspend fun addReserva(reserva: Reserva): Boolean {
-        val reservaResponse = repository.addReserva(reserva)
-
-        if (reservaResponse.success) {
-            // Añadimos la reserva a la lista, y reasignamos el valor de LiveData para que se actualice
-            _reservas.value = _reservas.value?.toMutableList()?.apply {
-                add(reservaResponse.reserva!!)
+    // Cargar todas las reservas del usuario
+    fun getReservas() {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val response = repository.getReservas()
+                Log.d("ReservaViewModel", "Respuesta getReservas: $response")
+                _reservas.value = response
+            } catch (e: Exception) {
+                Log.e("ReservaViewModel", "Error al cargar reservas", e)
+                _error.value = "Error al cargar reservas: ${e.message}"
+            } finally {
+                _loading.value = false
             }
         }
-
-        return reservaResponse.success
     }
 
-    suspend fun updateReserva(reserva: Reserva, newReserva: Reserva): Boolean {
-        val reservaResponse = repository.updateReserva(newReserva)
-
-        if (reservaResponse.success) {
-
-            // Reasignamos el valor de LiveData para que se actualice
-            _reservas.value = _reservas.value.orEmpty().map {
-                if (it == reserva) newReserva else it
-            }
-
-            _reservas.value = _reservas.value
-        }
-
-        return reservaResponse.success
-    }
-
-    suspend fun deleteReserva(reserva: Reserva): Boolean {
-        val reservaResponse = repository.deleteReserva(reserva)
-
-        if (reservaResponse.success) {
-            // Reasignamos el valor de LiveData para que se actualice
-            _reservas.value = _reservas.value?.toMutableList()?.apply {
-                remove(reserva)
+    // Crear una nueva reserva
+    fun crearReserva(reserva: Reserva) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val response = repository.addReserva(reserva)
+                if (response.success && response.reserva != null) {
+                    _reservas.value = ((_reservas.value.orEmpty() + response.reserva) as List<Reserva>?)
+                } else {
+                    _error.value = response.message
+                }
+            } catch (e: Exception) {
+                _error.value = "Error al crear reserva: ${e.message}"
+            } finally {
+                _loading.value = false
             }
         }
-
-        return reservaResponse.success
     }
 
-    suspend fun logout() : Boolean {
-        val logoutResponse = repository.logout()
-        return logoutResponse.success
+    // Obtener caravanas disponibles entre dos fechas
+    fun getCaravanasDisponibles
+                (fechaInicio: String,
+                 fechaFin: String,
+                 onResult: (List<Caravana>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val (disponibles, errorMsg) = repository.getCaravanasDisponibles(fechaInicio, fechaFin)
+                if (errorMsg != null) {
+                    _error.value = errorMsg
+                }
+                onResult(disponibles)
+            } catch (e: Exception) {
+                _error.value = "Error al consultar disponibilidad"
+                onResult(emptyList())
+            }
+        }
+    }
+
+    // Actualizar una reserva
+    fun updateReserva(reserva: Reserva, nueva: Reserva) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val result = repository.updateReserva(nueva)
+                if (result.reserva != null) {
+                    // Actualiza la lista local
+                    _reservas.value = _reservas.value.orEmpty().map {
+                        if (it.id == reserva.id) result.reserva else it
+                    }
+                    _updateResult.value = result.reserva
+                } else {
+                    _updateResult.value = null
+                    _error.value = "No se pudo actualizar la reserva"
+                }
+            } catch (e: Exception) {
+                _updateResult.value = null
+                _error.value = "Error al actualizar reserva: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+
+    fun clearUpdateResult() {
+        _updateResult.value = null
+    }
+
+
+    // Eliminar una reserva
+    fun deleteReserva(reserva: Reserva) {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                val result = repository.deleteReserva(reserva)
+                if (result.success) {
+                    _reservas.value = _reservas.value.orEmpty().filterNot { it.id == reserva.id }
+                } else {
+                    _error.value = result.message
+                }
+            } catch (e: Exception) {
+                _error.value = "Error al eliminar reserva: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    // Cerrar sesión
+    fun logout(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = repository.logout()
+                onResult(result.success)
+            } catch (e: Exception) {
+                _error.value = "Error al cerrar sesión: ${e.message}"
+                onResult(false)
+            }
+        }
+    }
+
+
+    fun clearError() {
+        _error.value = null
     }
 }

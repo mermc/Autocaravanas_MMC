@@ -33,6 +33,12 @@
             android:exported="false"
             android:parentActivityName=".LoginActivity">
         </activity>
-    </application>
+        <activity
+            android:name=".EmailVerificationActivity"
+            android:exported="false"
+            android:parentActivityName=".LoginActivity">
+        </activity>
 
+    </application>
+    <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>

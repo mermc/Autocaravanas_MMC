@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-parcelize")
+    alias(libs.plugins.androidx.navigation.safe.args)
 }
 
 android {
@@ -65,4 +67,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation (libs.kotlinx.coroutines.android)
 
+
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    implementation("com.github.bumptech.glide:glide:4.15.0")
 }

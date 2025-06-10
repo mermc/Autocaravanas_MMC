@@ -3,41 +3,51 @@ package com.example.autocaravanas.fragments
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.autocaravanas.MainActivity
 import com.example.autocaravanas.R
+import com.example.autocaravanas.databinding.FragmentEditReservaBinding
+import com.example.autocaravanas.model.Caravana
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.viewmodel.ReservaViewModel
-import java.time.LocalDate
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvider {
 
-    private var editReservaBinding: FragmentEditReservaBinding? = null
-    private val binding get() = editReservaBinding!!
+    private var _binding: FragmentEditReservaBinding? = null
+    private val binding get() = _binding!!
 
     private lateinit var reservasViewModel: ReservaViewModel
     private lateinit var currentReserva: Reserva
+
+
+    private var fechaInicio: String = ""
+    private var fechaFin: String = ""
 
     private val args: EditReservaFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        editReservaBinding = FragmentEditReservaBinding.inflate(inflater, container, false)
+    ): View {
+        _binding = FragmentEditReservaBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -50,102 +60,119 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
         reservasViewModel = (activity as MainActivity).reservaViewModel
         currentReserva = args.reserva!!
 
-        iniciarSpinnerHora()
+        fechaInicio = currentReserva.fechaInicio
+        fechaFin = currentReserva.fechaFin
 
-        binding.editReservaJinete.setText(currentReserva.nombreJinete)
-        binding.editReservaTelefono.setText(currentReserva.telefono)
-        binding.spinnerEditReservaCaballo.setSelection(
-            (binding.spinnerEditReservaCaballo.adapter as ArrayAdapter<String>)
-                .getPosition(currentReserva.nombreCaballo)
-        )
-        binding.editReservaFecha.setOnClickListener {
-            mostrarDatePickerDialog()
+        binding.editReservaFechaInicio.text = fechaInicio
+        binding.editReservaFechaFin.text = fechaFin
 
-        }
-        binding.editReservaHora.setSelection(
-            (binding.editReservaHora.adapter as ArrayAdapter<String>)
-                .getPosition(currentReserva.horaReserva)
-        )
-        binding.editReservaComentario.setText(currentReserva.comentario)
+        setupDatePickers()
 
         binding.editReservaFab.setOnClickListener {
-            edicionReserva()
+            Log.d("EditReserva", "Botón FAB pulsado. Fechas: $fechaInicio a $fechaFin")
+            editarReserva()
         }
 
-    }
-
-    private fun edicionReserva(){
-        val reservaJinete = binding.editReservaJinete.text.toString().trim()
-        val reservaTelefono = binding.editReservaTelefono.text.toString().trim()
-        val reservaCaballo = binding.spinnerEditReservaCaballo.selectedItem.toString().trim()
-        val fechaTexto = binding.editReservaFecha.text.toString()
-
-        val reservaHora = binding.editReservaHora.selectedItem.toString().trim()
-        val reservaComentario = binding.editReservaComentario.text.toString().trim()
-
-        if (reservaJinete.isEmpty() || reservaTelefono.isEmpty() || reservaCaballo.isNullOrEmpty() ||
-            fechaTexto.isEmpty() || reservaHora.isNullOrEmpty()) {
-            Toast.makeText(context, "Por favor completa todos los campos obligatorios", Toast.LENGTH_SHORT).show()
-            return
+        reservasViewModel.updateResult.observe(viewLifecycleOwner) { reservaActualizada ->
+            reservaActualizada?.let {
+                mostrarDialogResumen(it)
+                reservasViewModel.clearUpdateResult()
+            }
         }
 
-        // Validar número de teléfono
-        val telefonoRegex = Regex("^\\d{9}$")
-        if (!telefonoRegex.matches(reservaTelefono)) {
-            Toast.makeText(context, "El número de teléfono debe tener 9 dígitos", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val (day, month, year) = fechaTexto.split("/").map { it.toInt() }
-        val reservaFecha = LocalDate.of(year, month, day).toString()
-
-        if (reservaJinete.isNotEmpty()){
-            val reserva = Reserva (
-                currentReserva.id,
-                reservaJinete,
-                reservaTelefono,
-                reservaCaballo,
-                reservaFecha,
-                reservaHora,
-                reservaComentario
-            )
-            reservasViewModel.updateReserva(reserva)
-            view?.findNavController()?.popBackStack(R.id.homeFragment, false)
-        } else {
-            Toast.makeText(context, "Por favor introduce el nombre del jinete", Toast.LENGTH_SHORT).show()
+        reservasViewModel.error.observe(viewLifecycleOwner) { errorMsg ->
+            errorMsg?.let {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                reservasViewModel.clearError()
+            }
         }
     }
 
-    private fun deleteReserva(){
+    private fun setupDatePickers() {
+        binding.editReservaFechaInicio.setOnClickListener {
+            showDatePicker { date ->
+                fechaInicio = date
+                binding.editReservaFechaInicio.text = date
+                // Limpiar fecha fin y caravana al cambiar fecha inicio
+                fechaFin = ""
+                binding.editReservaFechaFin.text = ""
+            }
+        }
+        binding.editReservaFechaFin.setOnClickListener {
+            if (fechaInicio.isEmpty()) {
+                Toast.makeText(context, "Selecciona primero la fecha de inicio", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            showDatePicker { date ->
+                fechaFin = date
+                binding.editReservaFechaFin.text = date
+            }
+        }
+    }
+
+    private fun showDatePicker(onDateSet: (String) -> Unit) {
+        val calendar = Calendar.getInstance()
+        val datePicker = DatePickerDialog(requireContext(), { _, year, month, day ->
+            val fecha = String.format("%04d-%02d-%02d", year, month + 1, day)
+            onDateSet(fecha)
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+        datePicker.show()
+    }
+
+
+    private fun editarReserva() {
+        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) {
+            Toast.makeText(context, "Rellena todos los campos y selecciona caravana", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val reservaEditada = currentReserva.copy(
+            fechaInicio = fechaInicio,
+            fechaFin = fechaFin
+        )
+        Log.d("EditReserva", "Entrando en editarReserva con fechas: $fechaInicio / $fechaFin")
+        reservasViewModel.updateReserva(currentReserva, reservaEditada)
+
+    }
+
+    private fun mostrarDialogResumen(reserva: Reserva) {
+        Log.d("EditReserva", "Mostrando diálogo resumen: $reserva")
+        fun soloFecha(fecha: String): String {
+            return fecha.split("T", " ").firstOrNull() ?: fecha
+        }
+
+        val resumen = """
+            Caravana: ${reserva.caravana?.nombre ?: "N/A"}
+            Fechas: ${soloFecha(reserva.fechaInicio)} a ${soloFecha(reserva.fechaFin)}
+            Precio total: ${reserva.precioTotal} €
+            Precio pagado: ${reserva.precioPagado} €
+        """.trimIndent()
+
+        AlertDialog.Builder(requireContext())
+
+            .setTitle("Resumen de cambios")
+            .setMessage(resumen)
+            .setCancelable(false)
+            .setPositiveButton("Confirmar") { dialog, _ ->
+                dialog.dismiss()
+                Toast.makeText(context, "Reserva actualizada", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack(R.id.homeFragment, false)
+            }
+            .show()
+    }
+
+    private fun deleteReserva() {
         AlertDialog.Builder(activity).apply {
             setTitle("Borrar Reserva")
             setMessage("¿Está seguro de que quiere borrar esta reserva?")
-            setPositiveButton("Eliminar"){_,_ ->
-                reservasViewModel.deleteReserva(currentReserva)
-                Toast.makeText(context, " Reserva eliminada", Toast.LENGTH_SHORT).show()
-                view?.findNavController()?.popBackStack(R.id.homeFragment, false)
+            setPositiveButton("Eliminar") { _, _ ->
+                lifecycleScope.launch {
+                    reservasViewModel.deleteReserva(currentReserva)
+                    Toast.makeText(context, "Reserva eliminada", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack(R.id.homeFragment, false)
+                }
             }
             setNegativeButton("Cancelar", null)
         }.create().show()
-    }
-
-    private fun mostrarDatePickerDialog() {
-        val calendar = Calendar.getInstance()
-        val datePickerDialog = datePickerDialogCustom(
-            requireContext(),
-            DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                binding.editReservaFecha.text = "$dayOfMonth/${month + 1}/$year"
-            }
-        )
-        datePickerDialog.show()
-    }
-
-    private fun iniciarSpinnerHora() {
-        val horas = listOf("10:00", "11:00")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, horas)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.editReservaHora.adapter = adapter
     }
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -154,16 +181,17 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when(menuItem.itemId){
+        return when (menuItem.itemId) {
             R.id.deleteMenu -> {
                 deleteReserva()
                 true
-            } else -> false
+            }
+            else -> false
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        editReservaBinding = null
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

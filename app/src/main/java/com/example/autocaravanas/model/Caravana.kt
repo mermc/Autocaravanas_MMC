@@ -1,7 +1,9 @@
 package com.example.autocaravanas.model
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
-import java.io.Serializable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class Caravana(
     @SerializedName("id")
     val id: Int,
@@ -15,4 +17,4 @@ data class Caravana(
     val precioDia: Double,
     @SerializedName("foto")
     val foto: String?
-) : Serializable
+) : Parcelable
