@@ -18,6 +18,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.autocaravanas.MainActivity
@@ -53,12 +54,20 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+/*
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-
+*/
         reservasViewModel = (activity as MainActivity).reservaViewModel
         currentReserva = args.reserva!!
+
+        val menuHost: MenuHost = requireActivity()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                Log.d("MenuDebugEdit", "addMenuProvider ejecutado")
+                menuHost.addMenuProvider(this@EditReservaFragment)
+            }
+        }
 
         fechaInicio = currentReserva.fechaInicio
         fechaFin = currentReserva.fechaFin
@@ -176,13 +185,17 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
     }
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        Log.d("MenuDebugEdit", "onCreateMenu en ${this::class.java.simpleName}")
+        Log.d("MenuDebugEdit", "Menu Correcto")
         menu.clear()
         menuInflater.inflate(R.menu.menu_edit_reserva, menu)
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        Log.d("MenuDebugEdit", "Item seleccionado: ${menuItem.itemId}")
         return when (menuItem.itemId) {
             R.id.deleteMenu -> {
+                Log.d("MenuDebugEdit", "Acción de borrar ejecutada")
                 deleteReserva()
                 true
             }

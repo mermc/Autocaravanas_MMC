@@ -15,6 +15,8 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.autocaravanas.LoginActivity
@@ -22,8 +24,10 @@ import com.example.autocaravanas.MainActivity
 import com.example.autocaravanas.R
 import com.example.autocaravanas.adapter.ReservaAdapter
 import com.example.autocaravanas.databinding.FragmentHomeBinding
+import com.example.autocaravanas.fragments.EditReservaFragment
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.viewmodel.ReservaViewModel
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextListener,
     MenuProvider {
@@ -47,7 +51,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         super.onViewCreated(view, savedInstanceState)
 
         val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                Log.d("MenuDebugEdit", "addMenuProvider ejecutado")
+                menuHost.addMenuProvider(this@HomeFragment)
+            }
+        }
 
         reservasViewModel = (activity as MainActivity).reservaViewModel
         Log.d("HomeFragment", "onViewCreated: reservasViewModel = $reservasViewModel")
@@ -131,6 +140,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     // Métodos de MenuProvider
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        Log.d("MenuDebugHome", "onCreateMenu en ${this::class.java.simpleName}")
+        Log.d("MenuDebugHome", "Menu Correcto")
         menu.clear()
         menuInflater.inflate(R.menu.home_menu, menu)
     }
@@ -140,11 +151,13 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
             R.id.action_refresh -> {
+                Log.d("MenuDebugHome", "Item seleccionado: ${menuItem.itemId}")
                 reservasViewModel.getReservas()
                 Toast.makeText(requireContext(), "Reservas actualizadas", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.action_logout -> {
+                Log.d("MenuDebugHome", "Item seleccionado: ${menuItem.itemId}")
                 logout()
                 true
             }

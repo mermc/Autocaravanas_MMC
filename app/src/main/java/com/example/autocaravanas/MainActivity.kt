@@ -1,6 +1,7 @@
 package com.example.autocaravanas
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.ui.AppBarConfiguration
@@ -31,9 +32,12 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         // Mostrar la Toolbar solo en HomeFragment
+        val fragmentsConToolbar = setOf(R.id.homeFragment, R.id.editReservaFragment /*, otros IDs*/)
+
         navController.addOnDestinationChangedListener { _, destination, _ ->
+            Log.d("ToolbarDebug", "Destino actual: ${destination.id} (${resources.getResourceEntryName(destination.id)})")
             binding.toolbar.visibility =
-                if (destination.id == R.id.homeFragment) View.VISIBLE else View.GONE
+                if (destination.id in fragmentsConToolbar) View.VISIBLE else View.GONE
         }
 
         reservaViewModel = ViewModelProvider(this)[ReservaViewModel::class.java]
