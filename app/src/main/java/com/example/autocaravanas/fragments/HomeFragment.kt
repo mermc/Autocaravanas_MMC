@@ -1,5 +1,6 @@
 package com.example.autocaravanas.fragments
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -161,6 +162,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
                 logout()
                 true
             }
+            R.id.action_contact -> {
+                // Mostrar datos de contacto (puedes mostrar un AlertDialog, Fragment, actividad, etc.)
+                mostrarDialogoContacto()
+                true
+            }
             else -> false
         }
     }
@@ -180,6 +186,21 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     override fun onResume() {
         super.onResume()
         reservasViewModel.getReservas()
+    }
+
+    private fun mostrarDialogoContacto() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Contacto Autocaravanas Milan")
+            .setMessage(
+                """
+            Autocaravanas Milan
+            Teléfono: 999 888 777
+            Móvil: 666 555 444
+            Email: administracion@milanmc.me
+            """.trimIndent()
+            )
+            .setPositiveButton("Cerrar", null)
+            .show()
     }
 
 

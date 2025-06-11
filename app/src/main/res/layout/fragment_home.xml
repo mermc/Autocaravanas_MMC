@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="40dp"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="50dp"
             android:src="@drawable/emptybkg"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="parent"

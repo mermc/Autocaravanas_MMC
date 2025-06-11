@@ -156,8 +156,6 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
     }
 
 
-
-
     private fun fetchCaravanasDisponibles() {
         Log.d("AddReservaFragment", "FetchBien")
         if (fechaInicio.isEmpty() || fechaFin.isEmpty()) return

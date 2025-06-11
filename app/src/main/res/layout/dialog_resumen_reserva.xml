@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical" android:padding="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <TextView android:id="@+id/tvTitulo"
+        android:text="Resumen de tu reserva"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@+id/tvCaravana"
+        android:layout_marginTop="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@+id/tvFechas"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@+id/tvCapacidad"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@+id/tvPrecio"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <TextView android:id="@+id/informacionAdicional"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="Se te pedirán los datos para el pago en las próximas 24 horas"/>
+
+    <LinearLayout android:orientation="horizontal" android:layout_marginTop="24dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+        <Button android:id="@+id/btnCancelar"
+            android:text="Cancelar" android:layout_weight="1"
+            android:backgroundTint="@color/green1"
+            android:layout_width="50dp"
+            android:layout_height="match_parent" />
+
+        <Button android:id="@+id/btnConfirmar"
+            android:text="Confirmar" android:layout_weight="1"
+            android:backgroundTint="@color/green1"
+            android:layout_height="wrap_content"
+            android:layout_width="50dp" />
+    </LinearLayout>
+    </LinearLayout>

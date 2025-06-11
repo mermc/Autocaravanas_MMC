@@ -71,15 +71,15 @@ class ApiHelper(private val apiService: ApiService) {
         response.body() ?: ReservaResponse(false, null, "Error al reservar")
     }
 
-    suspend fun updateReserva(reserva: Reserva): Response<ReservaUpdateResponse> {
-        return apiService.updateReserva(
+    suspend fun updateReserva(reserva: Reserva): Response<ReservaUpdateResponse> = withContext(Dispatchers.IO) {
+        apiService.updateReserva(
             id = reserva.id,
             caravanaId = reserva.caravanaId,
             fechaInicio = reserva.fechaInicio,
             fechaFin = reserva.fechaFin
         )
-        Log.d("ApiHelper", "Actualizando reserva con ID: ${reserva.id}")
     }
+
 
     suspend fun deleteReserva(reservaId: Int): DeleteResponse = withContext(Dispatchers.IO) {
         val response = apiService.deleteReserva(reservaId)

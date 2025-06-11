@@ -24,6 +24,9 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
     private val _updateResult = MutableLiveData<Reserva?>()
     val updateResult: LiveData<Reserva?> get() = _updateResult
 
+    private val _deleteMessage = MutableLiveData<String?>()
+    val deleteMessage: LiveData<String?> = _deleteMessage
+
     private val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean> get() = _loading
 
@@ -36,10 +39,10 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
             _loading.value = true
             try {
                 val response = repository.getReservas()
-                Log.d("ReservaViewModel", "Respuesta getReservas: $response")
+                //Log.d("ReservaViewModel", "Respuesta getReservas: $response")
                 _reservas.value = response
             } catch (e: Exception) {
-                Log.e("ReservaViewModel", "Error al cargar reservas", e)
+                //Log.e("ReservaViewModel", "Error al cargar reservas", e)
                 _error.value = "Error al cargar reservas: ${e.message}"
             } finally {
                 _loading.value = false
@@ -90,6 +93,7 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _loading.value = true
             try {
+                Log.d("UpdateViewModel", "Ha llamado al ViewModel para actualizar la reserva: $nueva")
                 val result = repository.updateReserva(nueva)
                 if (result.reserva != null) {
                     // Actualiza la lista local
@@ -103,6 +107,7 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
                 }
             } catch (e: Exception) {
                 _updateResult.value = null
+                Log.d("UpdateDebugViewModel", "Mensaje de error enviado al observer: ${e.message}")
                 _error.value = "Error al actualizar reserva: ${e.message}"
             } finally {
                 _loading.value = false
@@ -122,10 +127,11 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
             _loading.value = true
             try {
                 val result = repository.deleteReserva(reserva)
+                // Mostrar siempre el mensaje recibido, no solo si success es false
+                _deleteMessage.value = result.message
+                //Log.d("ReservaViewModel", "Respuesta deleteReserva: $result")
                 if (result.success) {
                     _reservas.value = _reservas.value.orEmpty().filterNot { it.id == reserva.id }
-                } else {
-                    _error.value = result.message
                 }
             } catch (e: Exception) {
                 _error.value = "Error al eliminar reserva: ${e.message}"
@@ -151,5 +157,9 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun clearDeleteMessage() {
+        _deleteMessage.value = null
     }
 }

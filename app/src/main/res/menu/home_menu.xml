@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/refresh_icon"
+        android:title="Actualizar"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_logout"
+        android:icon="@drawable/exit_icon"
+        android:title="Cerrar sesión"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_contact"
+        android:icon="@drawable/baseline_contact_mail_24"
+        android:title="Contacto"
+        app:showAsAction="ifRoom" />
+</menu>

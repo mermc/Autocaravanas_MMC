@@ -8,7 +8,7 @@ import com.example.autocaravanas.model.GenericResponse
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.model.ReservaResponse
 import com.example.autocaravanas.model.ReservaUpdateResponse
-import com.example.autocaravanas.model.Usuario
+import org.json.JSONObject
 
 
 class ReservaRepository (private val apiHelper: ApiHelper) {
@@ -40,18 +40,32 @@ class ReservaRepository (private val apiHelper: ApiHelper) {
         val disponibilidad = FechaDisponibilidad(fechaInicio, fechaFin)
 
         return apiHelper.getCaravanasDisponibles(disponibilidad)
-        Log.d("ReservaRepository", "Caravanas disponibles: ${disponibilidad.fechaInicio} a ${disponibilidad.fechaFin}")
+        //Log.d("ReservaRepository", "Caravanas disponibles: ${disponibilidad.fechaInicio} a ${disponibilidad.fechaFin}")
     }
 
     suspend fun updateReserva(reserva: Reserva): ReservaUpdateResponse {
         val response = apiHelper.updateReserva(reserva)
         return if (response.isSuccessful) {
-            response.body() ?: ReservaUpdateResponse(null)
+            response.body() ?: ReservaUpdateResponse(
+                reserva = null,
+                error = "Respuesta vacía del servidor"
+            )
         } else {
-
-            ReservaUpdateResponse(null)
+            val errorBody = response.errorBody()?.string()
+            Log.d("UpdateDebugRepository", "ErrorBody recibido: $errorBody")
+            val errorMsg = try {
+                JSONObject(errorBody ?: "").optString("error", "No se pudo actualizar la reserva")
+            } catch (e: Exception) {
+                Log.d("UpdateDebugRepository", "Error al parsear errorBody: ${e.message}")
+                "No se pudo actualizar la reserva"
+            }
+            ReservaUpdateResponse(
+                reserva = null,
+                error = errorMsg
+            )
         }
     }
+
 
     suspend fun deleteReserva(reserva: Reserva) = apiHelper.deleteReserva(reserva.id)
 

@@ -28,7 +28,9 @@ import com.example.autocaravanas.model.Caravana
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.viewmodel.ReservaViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvider {
 
@@ -64,7 +66,7 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
         val menuHost: MenuHost = requireActivity()
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                Log.d("MenuDebugEdit", "addMenuProvider ejecutado")
+                //Log.d("MenuDebugEdit", "addMenuProvider ejecutado")
                 menuHost.addMenuProvider(this@EditReservaFragment)
             }
         }
@@ -78,18 +80,33 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
         setupDatePickers()
 
         binding.editReservaFab.setOnClickListener {
-            Log.d("EditReserva", "Botón FAB pulsado. Fechas: $fechaInicio a $fechaFin")
+            //Log.d("EditReserva", "Botón FAB pulsado. Fechas: $fechaInicio a $fechaFin")
             editarReserva()
         }
 
         reservasViewModel.updateResult.observe(viewLifecycleOwner) { reservaActualizada ->
+            Log.d("UpdateDebug1", "Observer activado. Mensaje: $reservaActualizada")
             reservaActualizada?.let {
                 mostrarDialogResumen(it)
+                Log.d("UpdateDebug1", "Reserva actualizada: $it")
                 reservasViewModel.clearUpdateResult()
             }
         }
 
+        reservasViewModel.deleteMessage.observe(viewLifecycleOwner) { msg ->
+            //Log.d("DeleteDebug", "Observer activado. Mensaje: $msg")
+            msg?.let {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                //Log.d("DeleteDebug", "Toast mostrado con mensaje: $it")
+                reservasViewModel.clearDeleteMessage()
+                //Log.d("DeleteDebug", "Mensaje de borrado limpiado")
+                findNavController().popBackStack(R.id.homeFragment, false)
+                //Log.d("DeleteDebug", "Navegación de vuelta al Home ejecutada")
+            }
+        }
+
         reservasViewModel.error.observe(viewLifecycleOwner) { errorMsg ->
+            Log.d("UpdateDebug2", "Observer activado. Mensaje: $errorMsg")
             errorMsg?.let {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                 reservasViewModel.clearError()
@@ -170,18 +187,57 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
     }
 
     private fun deleteReserva() {
-        AlertDialog.Builder(activity).apply {
-            setTitle("Borrar Reserva")
-            setMessage("¿Está seguro de que quiere borrar esta reserva?")
-            setPositiveButton("Eliminar") { _, _ ->
-                lifecycleScope.launch {
-                    reservasViewModel.deleteReserva(currentReserva)
-                    Toast.makeText(context, "Reserva eliminada", Toast.LENGTH_SHORT).show()
-                    findNavController().popBackStack(R.id.homeFragment, false)
-                }
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = Calendar.getInstance().time
+        val fechaInicioDate = try {
+            dateFormat.parse(currentReserva.fechaInicio)
+        } catch (e: Exception) {
+            null
+        }
+
+        if (fechaInicioDate == null) {
+            Toast.makeText(context, "Fecha de inicio no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Calcular días hasta el inicio
+        val diffMillis = fechaInicioDate.time - today.time
+        val dias = (diffMillis / (1000 * 60 * 60 * 24)).toInt()
+
+        when {
+            dias < 0 -> {
+                // Ya ha empezado
+                AlertDialog.Builder(requireContext())
+                    .setTitle("No permitido")
+                    .setMessage("No se puede cancelar una reserva que ya ha comenzado o finalizado.")
+                    .setPositiveButton("Aceptar", null)
+                    .show()
             }
-            setNegativeButton("Cancelar", null)
-        }.create().show()
+            dias < 15 -> {
+                // Menos de 15 días, mostrar advertencia especial
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Borrar Reserva")
+                    .setMessage("¿Está seguro de que quiere borrar esta reserva? Quedan menos de 15 días para el comienzo y se hará el cargo total.")
+                    .setPositiveButton("Eliminar") { _, _ ->
+                        Log.d("DeleteDebugMenos15", "Llamando a borrar reserva con id=${currentReserva.id}")
+                        reservasViewModel.deleteReserva(currentReserva)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+            else -> {
+                // Más de 15 días, diálogo normal
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Borrar Reserva")
+                    .setMessage("¿Está seguro de que quiere borrar esta reserva?")
+                    .setPositiveButton("Eliminar") { _, _ ->
+                        Log.d("DeleteDebugMas15", "Llamando a borrar reserva con id=${currentReserva.id}")
+                        reservasViewModel.deleteReserva(currentReserva)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        }
     }
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
