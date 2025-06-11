@@ -8,14 +8,14 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_logout"
-        android:icon="@drawable/exit_icon"
-        android:title="Cerrar sesión"
-        app:showAsAction="always" />
-
-    <item
         android:id="@+id/action_contact"
         android:icon="@drawable/baseline_contact_mail_24"
         android:title="Contacto"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_logout"
+        android:icon="@drawable/exit_icon"
+        android:title="Cerrar sesión"
+        app:showAsAction="always" />
 </menu>
