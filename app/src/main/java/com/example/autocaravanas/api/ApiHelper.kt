@@ -13,6 +13,7 @@ import com.example.autocaravanas.model.LogoutResponse
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.model.ReservaResponse
 import com.example.autocaravanas.model.ReservaUpdateResponse
+import com.example.autocaravanas.model.Usuario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -96,9 +97,23 @@ class ApiHelper(private val apiService: ApiService) {
         val response = apiService.reenviarEmailVerificacion()
         response.body() ?: GenericResponse(false, "Error al reenviar verificación")
     }
-
+/*
     suspend fun getUser() = withContext(Dispatchers.IO) {
         val response = apiService.getUser()
+        Log.d("ApiDebug", "getUser response: $response")
         response.body()!!
     }
+
+ */
+suspend fun getUser(): Usuario? = withContext(Dispatchers.IO) {
+    val response = apiService.getUser()
+    if (response.isSuccessful) {
+        Log.d("ApiDebug", "getUser success: ${response.body()}")
+        response.body()
+    } else {
+        Log.e("ApiDebug", "getUser error: ${response.code()} - ${response.errorBody()?.string()}")
+        null
+    }
+}
+
 }

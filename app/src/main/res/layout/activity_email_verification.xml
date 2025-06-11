@@ -14,7 +14,7 @@
 
         <TextView
             android:id="@+id/tvEstado"
-            android:text="Comprobando estado de verificación..."
+            android:text="Se te ha enviado un correo de verificación, revisa tu bandeja de entrada o spam"
             android:textSize="18sp"
             android:layout_marginBottom="24dp"
             android:layout_width="wrap_content"
@@ -24,6 +24,14 @@
             android:id="@+id/btnReenviar"
             android:text="Reenviar correo de verificación"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/green1"/>
+
+        <Button
+            android:id="@+id/btnYaVerificado"
+            android:text="Ya he verificado mi correo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"/>
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -49,24 +49,17 @@ class RegisterActivity: AppCompatActivity() {
                     Log.d("RegisterActivity", "Introducidos los datos: $name, $email, $password, $confirmPassword")
 
                     if (response.success) {
-
                         Log.d("RegisterActivity", "Dentro de success: ${response.login.token}")
                         ApiAdapter.setToken(response.login.token)
-
-                        val user = repository.getUser()
-
                         withContext(Dispatchers.Main) {
                             binding.btRegistro.isEnabled = true
-                            if (user.emailVerifiedAt == null) {
-                                val intent = Intent(this@RegisterActivity, EmailVerificationActivity::class.java)
-                                intent.putExtra("EMAIL", email)
-                                startActivity(intent)
-                            } else {
-                                val mainIntent = Intent(this@RegisterActivity, MainActivity::class.java)
-                                startActivity(mainIntent)
-                            }
+                            Log.d("RegisterActivity", "Registro exitoso, redirigiendo a verificación de email")
+                            val intent = Intent(this@RegisterActivity, EmailVerificationActivity::class.java)
+                            intent.putExtra("EMAIL", email)
+                            startActivity(intent)
                             finish()
                         }
+
                     } else {
                         Log.d("RegisterActivity", "No ha habido exito en el registro: ${response.message}")
                         withContext(Dispatchers.Main) {

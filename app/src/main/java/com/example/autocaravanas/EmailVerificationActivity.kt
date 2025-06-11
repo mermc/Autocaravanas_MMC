@@ -35,6 +35,13 @@ class EmailVerificationActivity : AppCompatActivity() {
             }
         }
 
+        // Nuevo botón por si ya lo ha verificado manualmente
+        binding.btnYaVerificado.setOnClickListener {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
         // Swipe-to-refresh para volver a verificar
         binding.swipeRefresh.setOnRefreshListener {
             lifecycleScope.launch {
@@ -47,13 +54,16 @@ class EmailVerificationActivity : AppCompatActivity() {
     private suspend fun checkEmailVerification() {
         try {
             val user = repository.getUser()
+            if (user == null) {
+                binding.tvEstado.text = "Error al obtener usuario. Intenta refrescar o verifica manualmente."
+                // Muestra el botón "Ya he verificado mi correo"
+                return
+            }
             if (user.emailVerifiedAt != null) {
-                // Ya verificado, ir a la pantalla principal
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             } else {
-                // Aún no verificado
-                binding.tvEstado.text = "Tu correo aún no ha sido verificado"
+                binding.tvEstado.text = "Se te ha enviado un correo de verificación, accede a tu bandeja de entrada o spam"
             }
         } catch (e: Exception) {
             Log.e("EmailVerification", "Error al comprobar verificación", e)
