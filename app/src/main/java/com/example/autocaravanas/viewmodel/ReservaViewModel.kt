@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.autocaravanas.api.ApiAdapter
 import com.example.autocaravanas.api.ApiHelper
 import com.example.autocaravanas.model.Caravana
-import com.example.autocaravanas.model.GenericResponse
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.repository.ReservaRepository
 import kotlinx.coroutines.launch

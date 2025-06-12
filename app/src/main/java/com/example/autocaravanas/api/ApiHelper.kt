@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 
+//ApiHelper para interactuar con la API llamando a los métodos del ApiService y enlazando las respuestas a los modelos de datos correspondientes.
 class ApiHelper(private val apiService: ApiService) {
 
     suspend fun login(email: String, password: String): LoginResponse = withContext(Dispatchers.IO) {
@@ -81,30 +82,16 @@ class ApiHelper(private val apiService: ApiService) {
         )
     }
 
-
     suspend fun deleteReserva(reservaId: Int): DeleteResponse = withContext(Dispatchers.IO) {
         val response = apiService.deleteReserva(reservaId)
         response.body() ?: DeleteResponse(false, "Error al eliminar reserva")
     }
 
-    suspend fun enviarEmail(to: String, subject: String, message: String): GenericResponse =
-        withContext(Dispatchers.IO) {
-            val response = apiService.enviarEmail(to, subject, message)
-            response.body() ?: GenericResponse(false, "Error al enviar email")
-        }
-
     suspend fun reenviarEmailVerificacion(): GenericResponse = withContext(Dispatchers.IO) {
         val response = apiService.reenviarEmailVerificacion()
         response.body() ?: GenericResponse(false, "Error al reenviar verificación")
     }
-/*
-    suspend fun getUser() = withContext(Dispatchers.IO) {
-        val response = apiService.getUser()
-        Log.d("ApiDebug", "getUser response: $response")
-        response.body()!!
-    }
 
- */
 suspend fun getUser(): Usuario? = withContext(Dispatchers.IO) {
     val response = apiService.getUser()
     if (response.isSuccessful) {

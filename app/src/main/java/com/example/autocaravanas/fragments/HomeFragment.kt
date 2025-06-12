@@ -128,14 +128,14 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         homeBinding = null
     }
 
-    // Métodos de SearchView.OnQueryTextListener
+    // Métodos de SearchView.OnQueryTextListener necesarios aunque estén vacíos
     override fun onQueryTextSubmit(query: String?): Boolean {
-        // Implementa la búsqueda si lo necesitas
+        // Se queda en blanco
         return false
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        // Implementa la búsqueda si lo necesitas
+        // Se queda en blanco
         return false
     }
 

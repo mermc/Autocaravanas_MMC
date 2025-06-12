@@ -56,10 +56,7 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-/*
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-*/
+
         reservasViewModel = (activity as MainActivity).reservaViewModel
         currentReserva = args.reserva!!
 
@@ -186,6 +183,7 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
             .show()
     }
 
+    // Método para borrar reserva respetando las reglas de negocio
     private fun deleteReserva() {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val today = Calendar.getInstance().time

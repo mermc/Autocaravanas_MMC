@@ -1,7 +1,6 @@
 package com.example.autocaravanas.api
 
 
-import com.example.autocaravanas.model.Caravana
 import com.example.autocaravanas.model.DeleteResponse
 import com.example.autocaravanas.model.DisponiblesResponse
 import com.example.autocaravanas.model.FechaDisponibilidad
@@ -11,7 +10,6 @@ import com.example.autocaravanas.model.LogoutResponse
 import com.example.autocaravanas.model.Reserva
 import com.example.autocaravanas.model.ReservaResponse
 import com.example.autocaravanas.model.ReservaUpdateResponse
-import com.example.autocaravanas.model.ReservasResponse
 import com.example.autocaravanas.model.Usuario
 import retrofit2.Response
 import retrofit2.http.Body
@@ -73,14 +71,6 @@ interface ApiService {
     suspend fun getCaravanasDisponibles(
         @Body request: FechaDisponibilidad
     ): Response<DisponiblesResponse>
-
-    @FormUrlEncoded
-    @POST("api/email")
-    suspend fun enviarEmail(
-        @Field("to") to: String,
-        @Field("subject") subject: String,
-        @Field("message") message: String
-    ): Response<GenericResponse>
 
     @GET("api/user")
     suspend fun getUser(): Response<Usuario>

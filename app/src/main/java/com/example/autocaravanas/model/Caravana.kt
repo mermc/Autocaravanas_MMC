@@ -18,3 +18,4 @@ data class Caravana(
     @SerializedName("foto")
     val foto: String?
 ) : Parcelable
+//Parcelable permite que la clase Caravana sea serializable y pueda ser pasada entre actividades o fragmentos

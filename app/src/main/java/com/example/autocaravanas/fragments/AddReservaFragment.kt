@@ -23,7 +23,7 @@ import java.util.Calendar
 
 
 class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
-
+// variables privadas para el binding y el ViewModel
     private var _binding: FragmentAddReservaBinding? = null
     private val binding get() = _binding!!
     private lateinit var reservasViewModel: ReservaViewModel
@@ -55,7 +55,7 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
                 reservasViewModel.clearError()
             }
         }
-
+        // Observa los cambios en las reservas
         reservasPrevias = reservasViewModel.reservas.value?.size ?: 0
 
         reservasViewModel.reservas.observe(viewLifecycleOwner) { reservas ->
@@ -65,7 +65,7 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
             reservasPrevias = reservas.size
         }
     }
-
+// Configura los pickers de fecha para elegir fecha inicio y fin
     private fun setupDatePickers() {
         Log.d("AddReservaFragment", "Fechas Bien")
         binding.fechaInicio.setOnClickListener {
@@ -93,6 +93,7 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
         }
     }
 
+
     private fun showDatePicker(onDateSet: (String) -> Unit) {
         Log.d("AddReservaFragment", "ShowBien")
         val calendar = Calendar.getInstance()
@@ -103,8 +104,20 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
         datePicker.show()
     }
 
+    // Obtiene las caravanas disponibles según las fechas seleccionadas
+    private fun fetchCaravanasDisponibles() {
+        Log.d("AddReservaFragment", "FetchBien")
+        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) return
+        reservasViewModel.getCaravanasDisponibles(fechaInicio, fechaFin) { disponibles ->
+            caravanaList = disponibles
+            updateCaravanaRecycler()
+            //Log.d("AddReservaFragment", "Caravanas disponibles: $caravanaList")
+        }
+    }
+
+// Configura el RecyclerView para mostrar las caravanas disponibles
     private fun setupHomeRecyclerView() {
-        Log.d("AddReservaFragment", "Ha entrado en recyclerview")
+        //Log.d("AddReservaFragment", "Ha entrado en recyclerview")
         caravanaAdapter = CaravanaDisponibleAdapter( caravanaList) { caravana ->
             selectedCaravana = caravana
             mostrarDialogResumen(caravana)
@@ -116,6 +129,16 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
         }
     }
 
+    // Actualiza el RecyclerView con la lista de caravanas disponibles
+    private fun updateCaravanaRecycler() {
+        Log.d("AddReservaFragment", "UpdateBien")
+        caravanaAdapter = CaravanaDisponibleAdapter(caravanaList) { caravana ->
+            mostrarDialogResumen(caravana)
+        }
+        binding.rvCaravanas.adapter = caravanaAdapter
+    }
+
+    //Resumen de la reserva para confirmar antes de crearla
     private fun mostrarDialogResumen(caravana: Caravana) {
         val binding = DialogResumenReservaBinding.inflate(layoutInflater)
 
@@ -154,26 +177,6 @@ class AddReservaFragment : Fragment(R.layout.fragment_add_reserva) {
 
         dialog.show()
     }
-
-
-    private fun fetchCaravanasDisponibles() {
-        Log.d("AddReservaFragment", "FetchBien")
-        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) return
-        reservasViewModel.getCaravanasDisponibles(fechaInicio, fechaFin) { disponibles ->
-            caravanaList = disponibles
-            updateCaravanaRecycler()
-            Log.d("AddReservaFragment", "Caravanas disponibles: $caravanaList")
-        }
-    }
-
-    private fun updateCaravanaRecycler() {
-        Log.d("AddReservaFragment", "UpdateBien")
-        caravanaAdapter = CaravanaDisponibleAdapter(caravanaList) { caravana ->
-            mostrarDialogResumen(caravana)
-        }
-        binding.rvCaravanas.adapter = caravanaAdapter
-    }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

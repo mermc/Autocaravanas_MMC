@@ -27,9 +27,6 @@ class ReservaRepository (private val apiHelper: ApiHelper) {
 
     suspend fun logout() = apiHelper.logout()
 
-    suspend fun enviarEmail(to: String, subject: String, message: String) =
-        apiHelper.enviarEmail(to, subject, message)
-
     suspend fun getReservas(): List<Reserva> {
         return apiHelper.getReservas()
     }
@@ -52,11 +49,11 @@ class ReservaRepository (private val apiHelper: ApiHelper) {
             )
         } else {
             val errorBody = response.errorBody()?.string()
-            Log.d("UpdateDebugRepository", "ErrorBody recibido: $errorBody")
+            //Log.d("UpdateDebugRepository", "ErrorBody recibido: $errorBody")
             val errorMsg = try {
                 JSONObject(errorBody ?: "").optString("error", "No se pudo actualizar la reserva")
             } catch (e: Exception) {
-                Log.d("UpdateDebugRepository", "Error al parsear errorBody: ${e.message}")
+                //Log.d("UpdateDebugRepository", "Error al parsear errorBody: ${e.message}")
                 "No se pudo actualizar la reserva"
             }
             ReservaUpdateResponse(
@@ -69,4 +66,8 @@ class ReservaRepository (private val apiHelper: ApiHelper) {
 
     suspend fun deleteReserva(reserva: Reserva) = apiHelper.deleteReserva(reserva.id)
 
+    /*
+    suspend fun enviarEmail(to: String, subject: String, message: String) =
+        apiHelper.enviarEmail(to, subject, message)
+*/
 }
