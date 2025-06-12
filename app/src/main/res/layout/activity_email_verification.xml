@@ -12,9 +12,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="34dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="24dp"
+            android:layout_marginStart="24dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/logodef" />
+
         <TextView
             android:id="@+id/tvEstado"
-            android:text="Se te ha enviado un correo de verificación, revisa tu bandeja de entrada o spam"
+            android:text="Se ha enviado un correo de verificación, revisa tu bandeja de entrada o spam"
             android:textSize="18sp"
             android:layout_marginBottom="24dp"
             android:layout_width="wrap_content"

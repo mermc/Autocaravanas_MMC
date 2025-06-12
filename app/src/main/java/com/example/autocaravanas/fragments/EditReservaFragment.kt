@@ -82,10 +82,10 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
         }
 
         reservasViewModel.updateResult.observe(viewLifecycleOwner) { reservaActualizada ->
-            Log.d("UpdateDebug1", "Observer activado. Mensaje: $reservaActualizada")
+            //Log.d("UpdateDebug1", "Observer activado. Mensaje: $reservaActualizada")
             reservaActualizada?.let {
                 mostrarDialogResumen(it)
-                Log.d("UpdateDebug1", "Reserva actualizada: $it")
+                //Log.d("UpdateDebug1", "Reserva actualizada: $it")
                 reservasViewModel.clearUpdateResult()
             }
         }
@@ -103,7 +103,7 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
         }
 
         reservasViewModel.error.observe(viewLifecycleOwner) { errorMsg ->
-            Log.d("UpdateDebug2", "Observer activado. Mensaje: $errorMsg")
+            //Log.d("UpdateDebug2", "Observer activado. Mensaje: $errorMsg")
             errorMsg?.let {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                 reservasViewModel.clearError()
@@ -152,13 +152,13 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
             fechaInicio = fechaInicio,
             fechaFin = fechaFin
         )
-        Log.d("EditReserva", "Entrando en editarReserva con fechas: $fechaInicio / $fechaFin")
+        //Log.d("EditReserva", "Entrando en editarReserva con fechas: $fechaInicio / $fechaFin")
         reservasViewModel.updateReserva(currentReserva, reservaEditada)
 
     }
 
     private fun mostrarDialogResumen(reserva: Reserva) {
-        Log.d("EditReserva", "Mostrando diálogo resumen: $reserva")
+        //Log.d("EditReserva", "Mostrando diálogo resumen: $reserva")
         fun soloFecha(fecha: String): String {
             return fecha.split("T", " ").firstOrNull() ?: fecha
         }
@@ -239,17 +239,17 @@ class EditReservaFragment : Fragment(R.layout.fragment_edit_reserva), MenuProvid
     }
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        Log.d("MenuDebugEdit", "onCreateMenu en ${this::class.java.simpleName}")
-        Log.d("MenuDebugEdit", "Menu Correcto")
+        //Log.d("MenuDebugEdit", "onCreateMenu en ${this::class.java.simpleName}")
+        //Log.d("MenuDebugEdit", "Menu Correcto")
         menu.clear()
         menuInflater.inflate(R.menu.menu_edit_reserva, menu)
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        Log.d("MenuDebugEdit", "Item seleccionado: ${menuItem.itemId}")
+        //Log.d("MenuDebugEdit", "Item seleccionado: ${menuItem.itemId}")
         return when (menuItem.itemId) {
             R.id.deleteMenu -> {
-                Log.d("MenuDebugEdit", "Acción de borrar ejecutada")
+                //Log.d("MenuDebugEdit", "Acción de borrar ejecutada")
                 deleteReserva()
                 true
             }

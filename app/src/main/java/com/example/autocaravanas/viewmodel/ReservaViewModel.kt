@@ -102,11 +102,11 @@ class ReservaViewModel(application: Application) : AndroidViewModel(application)
                     _updateResult.value = result.reserva
                 } else {
                     _updateResult.value = null
-                    _error.value = "No se pudo actualizar la reserva"
+                    _error.value = "Menos de 7 días para inicio.No se pudo actualizar la reserva"
                 }
             } catch (e: Exception) {
                 _updateResult.value = null
-                Log.d("UpdateDebugViewModel", "Mensaje de error enviado al observer: ${e.message}")
+                //Log.d("UpdateDebugViewModel", "Mensaje de error enviado al observer: ${e.message}")
                 _error.value = "Error al actualizar reserva: ${e.message}"
             } finally {
                 _loading.value = false
